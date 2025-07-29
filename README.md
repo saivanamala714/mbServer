@@ -58,7 +58,7 @@ A simple Express.js server with REST API endpoints, ready for deployment to Fire
    ```json
    {
      "projects": {
-       "default": "your-actual-firebase-project-id"
+       "default": "mbserver-api-2025"
      }
    }
    ```
@@ -70,16 +70,16 @@ A simple Express.js server with REST API endpoints, ready for deployment to Fire
 
 3. Your API will be available at:
    ```
-   https://us-central1-your-project-id.cloudfunctions.net/api
+   https://us-central1-mbserver-api-2025.cloudfunctions.net/api
    ```
 
 ### Testing Deployed API
 
 ```bash
-# Replace with your actual function URL
-curl https://us-central1-your-project-id.cloudfunctions.net/api
-curl https://us-central1-your-project-id.cloudfunctions.net/api/health
-curl https://us-central1-your-project-id.cloudfunctions.net/api/api/users
+# Test the deployed endpoints
+curl https://us-central1-mbserver-api-2025.cloudfunctions.net/api
+curl https://us-central1-mbserver-api-2025.cloudfunctions.net/api/health
+curl https://us-central1-mbserver-api-2025.cloudfunctions.net/api/api/users
 ```
 
 ## Project Structure
@@ -90,6 +90,8 @@ mbServer/
 ├── package.json      # Node.js dependencies and scripts
 ├── firebase.json     # Firebase configuration
 ├── .firebaserc       # Firebase project configuration
+├── .gitignore        # Git ignore file
+├── DEPLOYMENT.md     # Detailed deployment instructions
 └── README.md         # This file
 ```
 
