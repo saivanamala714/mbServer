@@ -1,12 +1,22 @@
 const express = require('express');
 const functions = require('firebase-functions');
+const path = require('path');
+const os = require('os');
 const app = express();
 
 // Middleware to parse JSON requests
 app.use(express.json());
 
-// Simple GET API endpoint
+// Serve static files from public directory
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Serve the main dashboard page
 app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// API welcome endpoint
+app.get('/api/welcome', (req, res) => {
   res.json({
     message: 'Welcome to mbServer!',
     status: 'success',
@@ -19,7 +29,35 @@ app.get('/health', (req, res) => {
   res.json({
     status: 'healthy',
     uptime: process.uptime(),
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    hostname: os.hostname(),
+    platform: os.platform(),
+    memory: {
+      total: os.totalmem(),
+      free: os.freemem(),
+      used: process.memoryUsage()
+    }
+  });
+});
+
+// Server information endpoint
+app.get('/api/server-info', (req, res) => {
+  res.json({
+    hostname: os.hostname(),
+    platform: os.platform(),
+    architecture: os.arch(),
+    cpus: os.cpus().length,
+    uptime: process.uptime(),
+    nodeVersion: process.version,
+    location: 'US-Central (Firebase Functions)',
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    timestamp: new Date().toISOString(),
+    memory: {
+      total: Math.round(os.totalmem() / 1024 / 1024) + ' MB',
+      free: Math.round(os.freemem() / 1024 / 1024) + ' MB',
+      usage: process.memoryUsage()
+    },
+    loadAverage: os.loadavg()
   });
 });
 
