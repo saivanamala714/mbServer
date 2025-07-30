@@ -10,6 +10,9 @@ app.use(express.json());
 // Serve static files from public directory
 app.use(express.static(path.join(__dirname, 'public')));
 
+// In-memory storage for events (in production, use a database)
+let events = [];
+
 // Serve the main dashboard page
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
@@ -68,12 +71,89 @@ app.get('/api/users', (req, res) => {
     { id: 2, name: 'Jane Smith', email: 'jane@example.com' },
     { id: 3, name: 'Bob Johnson', email: 'bob@example.com' }
   ];
-  
+
   res.json({
     message: 'Users retrieved successfully',
     data: users,
     count: users.length
   });
+});
+
+// POST endpoint to save events
+app.post('/api/event/saveEvent', (req, res) => {
+  try {
+    const { id, date, details } = req.body;
+
+    // Validate required fields
+    if (!id || !date || !details) {
+      return res.status(400).json({
+        error: 'Missing required fields',
+        message: 'Please provide id, date, and details',
+        required: ['id', 'date', 'details']
+      });
+    }
+
+    // Check if event with same ID already exists
+    const existingEventIndex = events.findIndex(event => event.id === id);
+
+    const eventData = {
+      id,
+      date,
+      details,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    if (existingEventIndex !== -1) {
+      // Update existing event
+      eventData.createdAt = events[existingEventIndex].createdAt;
+      events[existingEventIndex] = eventData;
+
+      res.json({
+        message: 'Event updated successfully',
+        event: eventData,
+        action: 'updated'
+      });
+    } else {
+      // Create new event
+      events.push(eventData);
+
+      res.status(201).json({
+        message: 'Event created successfully',
+        event: eventData,
+        action: 'created'
+      });
+    }
+
+  } catch (error) {
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to save event',
+      details: error.message
+    });
+  }
+});
+
+// GET endpoint to retrieve all events
+app.get('/api/events', (req, res) => {
+  try {
+    // Sort events by creation date (newest first)
+    const sortedEvents = events.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    res.json({
+      message: 'Events retrieved successfully',
+      data: sortedEvents,
+      count: sortedEvents.length,
+      timestamp: new Date().toISOString()
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'Failed to retrieve events',
+      details: error.message
+    });
+  }
 });
 
 // Error handling middleware
