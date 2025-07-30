@@ -5,6 +5,8 @@
   "scripts": {
     "start": "node index.js",
     "dev": "node index.js",
+    "deploy": "firebase deploy --only functions",
+    "deploy:check": "./deploy.sh",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

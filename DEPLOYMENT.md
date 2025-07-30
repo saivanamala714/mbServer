@@ -33,10 +33,21 @@ Firebase Functions requires the **Blaze (pay-as-you-go) plan**.
 
 #### 2. Deploy to Firebase Functions
 
-After upgrading to Blaze plan, run:
+After upgrading to Blaze plan, you can deploy using any of these methods:
 
+**Option 1: Using npm script**
+```bash
+npm run deploy
+```
+
+**Option 2: Using Firebase CLI directly**
 ```bash
 firebase deploy --only functions
+```
+
+**Option 3: Using the deployment script**
+```bash
+./deploy.sh
 ```
 
 #### 3. Test Your Deployed API
