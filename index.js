@@ -1,7 +1,16 @@
 const express = require('express');
 const functions = require('firebase-functions');
+const admin = require('firebase-admin');
 const path = require('path');
 const os = require('os');
+
+// Initialize Firebase Admin SDK
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
+
+// Get Firebase Storage bucket
+const bucket = admin.storage().bucket();
 const app = express();
 
 // Middleware to parse JSON requests
@@ -80,7 +89,7 @@ app.get('/api/users', (req, res) => {
 });
 
 // POST endpoint to save events
-app.post('/api/event/saveEvent', (req, res) => {
+app.post('/api/event/saveEvent', async (req, res) => {
   try {
     const { id, date, details } = req.body;
 
@@ -108,16 +117,45 @@ app.post('/api/event/saveEvent', (req, res) => {
       // Update existing event
       eventData.createdAt = events[existingEventIndex].createdAt;
       events[existingEventIndex] = eventData;
+    } else {
+      // Create new event
+      events.push(eventData);
+    }
 
+    // Save event data to Firebase Storage
+    try {
+      const fileName = `events/event_${id}_${Date.now()}.json`;
+      const file = bucket.file(fileName);
+      
+      await file.save(JSON.stringify(eventData, null, 2), {
+        metadata: {
+          contentType: 'application/json',
+          metadata: {
+            eventId: id,
+            uploadedAt: new Date().toISOString(),
+            source: 'saveEvent-api'
+          }
+        }
+      });
+
+      console.log(`Event ${id} saved to Firebase Storage: ${fileName}`);
+      
+      // Add cloud storage info to response
+      eventData.cloudStorageFile = fileName;
+      
+    } catch (storageError) {
+      console.error('Failed to save to Firebase Storage:', storageError);
+      // Continue with local storage even if cloud storage fails
+      eventData.cloudStorageError = 'Failed to save to cloud storage';
+    }
+
+    if (existingEventIndex !== -1) {
       res.json({
         message: 'Event updated successfully',
         event: eventData,
         action: 'updated'
       });
     } else {
-      // Create new event
-      events.push(eventData);
-
       res.status(201).json({
         message: 'Event created successfully',
         event: eventData,
