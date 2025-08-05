@@ -6,7 +6,9 @@ const os = require('os');
 
 // Initialize Firebase Admin SDK
 if (!admin.apps.length) {
-  admin.initializeApp();
+  admin.initializeApp({
+    storageBucket: 'mbserver-api-2025.appspot.com'
+  });
 }
 
 // Get Firebase Storage bucket
