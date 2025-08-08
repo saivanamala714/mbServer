@@ -124,31 +124,40 @@ app.post('/api/event/saveEvent', async (req, res) => {
       events.push(eventData);
     }
 
-    // Save event data to Firebase Storage
-    try {
-      const fileName = `events/event_${id}_${Date.now()}.json`;
-      const file = bucket.file(fileName);
-      
-      await file.save(JSON.stringify(eventData, null, 2), {
-        metadata: {
-          contentType: 'application/json',
+    // Save event data to Firebase Storage (only in production)
+    const isProduction = process.env.NODE_ENV === 'production' || process.env.FUNCTIONS_EMULATOR !== 'true';
+    
+    if (isProduction) {
+      try {
+        const fileName = `events/event_${id}_${Date.now()}.json`;
+        const file = bucket.file(fileName);
+        
+        await file.save(JSON.stringify(eventData, null, 2), {
           metadata: {
-            eventId: id,
-            uploadedAt: new Date().toISOString(),
-            source: 'saveEvent-api'
+            contentType: 'application/json',
+            metadata: {
+              eventId: id,
+              uploadedAt: new Date().toISOString(),
+              source: 'saveEvent-api'
+            }
           }
-        }
-      });
+        });
 
-      console.log(`Event ${id} saved to Firebase Storage: ${fileName}`);
-      
-      // Add cloud storage info to response
-      eventData.cloudStorageFile = fileName;
-      
-    } catch (storageError) {
-      console.error('Failed to save to Firebase Storage:', storageError);
-      // Continue with local storage even if cloud storage fails
-      eventData.cloudStorageError = 'Failed to save to cloud storage';
+        console.log(`Event ${id} saved to Firebase Storage: ${fileName}`);
+        
+        // Add cloud storage info to response
+        eventData.cloudStorageFile = fileName;
+        
+      } catch (storageError) {
+        console.error('Failed to save to Firebase Storage:', storageError);
+        // Continue with local storage even if cloud storage fails
+        eventData.cloudStorageError = 'Failed to save to cloud storage';
+      }
+    } else {
+      // Local development - skip Firebase Storage
+      console.log(`Event ${id} saved locally (Firebase Storage skipped in development)`);
+      eventData.localDevelopment = true;
+      eventData.note = 'Firebase Storage skipped in local development';
     }
 
     if (existingEventIndex !== -1) {
